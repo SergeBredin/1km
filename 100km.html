@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en">
+	<!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" />
+		<title>1 Km</title>
+
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFsYKoqX2pkuRyk6nunqW8P0b8DC7BX9s&libraries=places"></script>
+		<style>		
+			header, footer {
+				max-width: 400px;
+				width:100%;
+				margin: 0 auto;
+				font-family: 'Helvetica Neue',sans-serif !important;
+				font-size: 14px !important;
+				text-align: center;
+				z-index:1;
+				background-color: rgb(255,255,255,0.5); 
+				left: 0;
+				right: 0;
+			}
+			header form {
+				margin: 0px;
+				margin-bottom: 5px;
+				padding: 5px;
+				background-color: white;
+			}
+			header {
+				position: fixed;
+				top: 0;
+			}
+			#address {
+				width: 100%;
+				max-width: 250px;
+			}
+			#map{
+				/*padding: 0;*/
+				padding-top: 45px;
+				height: 100vh;
+				width: 100%;
+				background-color: white; 
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<form> 
+				<input type="text" id="address" placeholder="Entrez votre adresse"/>
+				<button class="btn" id="btn-location"><a href="javascript:;" onclick="getCurrentPosition()">Ma position</a></button>
+			</form>
+		</header>
+		<div id="map"></div>
+		<noscript>
+			<div id="page-container">
+				<div class="text-center p-t-30 p-b-20 bg-white">
+					<h4 class="m-t-20 text-default"><em>Cette page nécessite l'activation du javascript dans votre navigateur.</em></h4>
+				</div>    
+			</div>
+		</noscript>
+	</body>
+	<script type="text/javascript">
+		function success(position){
+			refreshMap(position.coords.latitude,position.coords.longitude);
+		}
+		function error(error){
+			var info = 'Erreur de géolocalisation : ';
+			switch(error.code) {
+			case error.TIMEOUT:
+				info += 'Timeout !';
+			break;
+			case error.PERMISSION_DENIED:
+				info += 'Vous n’avez pas donné la permission';
+			break;
+			case error.POSITION_UNAVAILABLE:
+				info += 'La position n’a pu être déterminée';
+			break;
+			case error.UNKNOWN_ERROR:
+				info += 'Erreur inconnue';
+			break;
+			}
+			alert(info);
+		}
+		function getCurrentPosition(){
+			if(navigator.geolocation) {
+				document.getElementById("btn-location").disabled = true;
+				document.getElementById("btn-location").textContent = "recherche...";
+				navigator.geolocation.getCurrentPosition(success, error);
+				document.getElementById("btn-location").disabled = false;
+				document.getElementById("btn-location").textContent = "Ma position";
+			}
+			else{
+				alert('Ce navigateur ne supporte pas la géolocalisation');
+			}
+		}
+		function autocomplete(id) {
+
+			var element = document.getElementById(id);
+			if (element) {
+
+				var autocomplete = new google.maps.places.Autocomplete(element, { 
+					// bounds: cityBounds,
+					strictBounds: true,
+					types: ['geocode'], 
+					componentRestrictions: {country: 'fr'} 
+				});
+				google.maps.event.addListener(autocomplete, 'place_changed', onAddressChanged);
+				google.maps.event.addDomListener(element, 'keydown', function(e) { 
+					if (e.keyCode === 13) { 
+						e.preventDefault(); 
+					}
+				});
+			}
+		}
+		function onAddressChanged() {
+			var place = this.getPlace();
+			
+			if(place.geometry.location === undefined) return;
+			refreshMap(place.geometry.location.lat(),place.geometry.location.lng());
+			document.getElementById("address").value = "";
+		}
+		function refreshMap(lat, lng){
+			var options = {
+				zoom: 15,
+				center: new google.maps.LatLng(lat, lng),
+				// mapTypeId: 'satellite',
+				// scrollwheel: false
+				mapTypeControl: true,
+				mapTypeControlOptions: {
+					// style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+					position: google.maps.ControlPosition.LEFT_BOTTOM
+				},
+				fullscreenControl: true,
+				fullscreenControlOptions: {
+					position: google.maps.ControlPosition.RIGHT_TOP
+				},
+				zoomControl: true,
+				zoomControlOptions: {
+					position: google.maps.ControlPosition.RIGHT_BOTTOM
+				},
+				scaleControl: true,
+			}
+			var map = new google.maps.Map(document.getElementById("map"), options);
+
+			var circle = new google.maps.Circle({ map: map, center: options.center, radius: 100000});
+			var marker = new google.maps.Marker({
+				position: options.center,
+				fontSize: 20,
+				map: map
+			});
+		}
+		refreshMap(44.8537161, -0.587332);
+		autocomplete('address');
+	</script>
+</html>
